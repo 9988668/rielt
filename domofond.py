@@ -6,6 +6,10 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 import datetime
+import psycopg2
+import numpy as np 
+import sqlalchemy
+# from sqlalchemy import create_engine
 
 DATE = []
 ROOMS_CNT = []
@@ -37,7 +41,7 @@ def change_rooms_cnt(rooms_cnt):
     if rooms_cnt.isdigit():
         return int(rooms_cnt)
     else:
-        return 'студия'
+        return int(0)
 
 def get_page_data(html):
     soup = BeautifulSoup(html, 'lxml')
@@ -116,11 +120,19 @@ def main():
         get_page_data(get_html(gen_url))
 
     df = pd.DataFrame(list(zip(DATE, ROOMS_CNT, URL, PRICE, PRICE_FOR_METRE, SPACE, FLOOR, NUMBER_OF_FLOORS, ADRESS, SOURCE)), 
-                          columns = ['дата', 'количество комнат', 'URL', 'цена квартиры', 'цена за кв.метр', 'площадь квартиры', 'этаж', 'этажность дома', 'адрес квартиры', 'источник'])
+                          columns = ['date', 'rooms_cnt', 'url', 'price', 'price_one_metre', 'space', 'floor', 'floors_of_house', 'adress', 'source'])
 
     df.to_csv('kotelniki_all_flat.csv')
+    print('ok, file is save') 
 
-    print('ok, file is save')    
+    # устанавливаем соединение с БД postgresql
+    engine = sqlalchemy.create_engine('postgresql://postgres:paedf5l5@localhost/postgres')
+    con = engine.connect()
+
+    # записываем df to postgres в таблицу kotelniki
+    table_name = 'kotelniki'
+    df.to_sql(table_name, con, if_exists='append', index=False)
+
     
 if __name__ == '__main__':
     main()
