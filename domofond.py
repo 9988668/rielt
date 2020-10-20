@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 # импортируем библиотеки
@@ -9,7 +9,7 @@ import datetime
 import psycopg2
 import numpy as np 
 import sqlalchemy
-# from sqlalchemy import create_engine
+
 
 DATE = []
 ROOMS_CNT = []
@@ -122,7 +122,7 @@ def main():
     df = pd.DataFrame(list(zip(DATE, ROOMS_CNT, URL, PRICE, PRICE_FOR_METRE, SPACE, FLOOR, NUMBER_OF_FLOORS, ADRESS, SOURCE)), 
                           columns = ['date', 'rooms_cnt', 'url', 'price', 'price_one_metre', 'space', 'floor', 'floors_of_house', 'adress', 'source'])
 
-    df.to_csv('kotelniki_all_flat.csv')
+    df.to_csv('kotelniki_all_flat_{}.csv'.format(datetime.date.today()))
     print('ok, file is save') 
 
     # устанавливаем соединение с БД postgresql
@@ -132,6 +132,8 @@ def main():
     # записываем df to postgres в таблицу kotelniki
     table_name = 'kotelniki'
     df.to_sql(table_name, con, if_exists='append', index=False)
+
+    con.close()
 
     
 if __name__ == '__main__':
