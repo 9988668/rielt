@@ -19,15 +19,14 @@ def get_data_in_data_base(table_name):
     con.close()
     return df 
 
+def averange_price(df):
+    return pd.pivot_table(df, index='rooms_cnt', columns='date', values='price_one_metre', aggfunc='mean')
+
 def new_addition_cnt(df, today, yesterday):
     addition_today = df.query('date == @today')
     addition_yesterday = df.query('date == @yesterday')
 
     return len(addition_today) - len(addition_yesterday)
-
-
-def averange_price(df, today, yesterday):
-    pass
 
 
 def main():
@@ -44,6 +43,10 @@ def main():
     df_1 = new_addition_cnt(df, today, yesterday)
 
     print('new addition is {}'.format(df_1))
+
+    rezult = averange_price(df)
+
+    print(rezult)
 
 if __name__ == '__main__':
     main()
