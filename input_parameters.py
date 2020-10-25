@@ -35,14 +35,6 @@ style_text = {
             'font-size':'150%'
             }
 
-style_table_header = {
-            'textAlign':'center',
-            'color':'grey',
-            'font-size':'100%',
-            'font-weight':'bold',
-            'fill_color':'paleturquoise'
-}
-
 all_flat_share_rooms = (all_flat.groupby('rooms_cnt')
                                 . agg({'url':'nunique'})
                                 . reset_index())
@@ -149,36 +141,8 @@ app.layout = html.Div(children=[
                         date = datetime.date.today()
                                 ),
 
-            dcc.Graph(
-                    # figure = {
-                    #         'data' : [go.Pie(labels = all_flat_share_rooms['rooms_cnt'], 
-                    #                          values = all_flat_share_rooms['url'],
-                    #                          name = 'pie'
-                    #                          )],
-                    #         'layout':go.Layout()
-
-                    #         },
-                    id = 'pie_chart'
-                    ),
-
-            dcc.Graph(
-                    # figure = {
-                    #         'data' : [go.Table(
-                    #                             header = dict(values=['квартира', 'количество', 'мин. цена кв.м.', 'средняя цена кв.м.', 'макс. цена кв.м.'],
-                    #                                           fill_color = 'paleturquoise'
-                    #                                         ),
-                    #                             cells = dict(values=[all_flat_left_table.rooms_cnt, 
-                    #                                                  all_flat_left_table.url, 
-                    #                                                  all_flat_left_table.price_one_metre['min'],
-                    #                                                  all_flat_left_table.price_one_metre['mean'],
-                    #                                                  all_flat_left_table.price_one_metre['max']],
-                    #                                         fill_color='lavender'
-                    #                                         )
-                    #                            ) 
-                    #                  ]
-                    #         },
-                    id = 'table'
-                    )
+            dcc.Graph(id = 'pie_chart'),
+            dcc.Graph(id = 'left_table')
 
                 ], className = 'four columns'),
 
@@ -186,7 +150,8 @@ app.layout = html.Div(children=[
             html.Br(),
             html.Label('предложения квартир в г. Котельники',
                         style = style_text
-                      )
+                      ),
+            dcc.Graph(id = 'right_table')
                 ], className = 'eight columns')
             ])
 
@@ -195,7 +160,8 @@ app.layout = html.Div(children=[
 #описываем логику дашборда
 @app.callback(
     [Output('pie_chart', 'figure'),
-     Output('table', 'figure'),
+     Output('left_table', 'figure'),
+     Output('right_table', 'figure'),
     ],
     [Input('dt_range_selector', 'start_date'),
      Input('dt_range_selector', 'end_date'),
@@ -222,6 +188,8 @@ def update_figure(start_date, end_date, value, single_date, rooms):
                                       . agg({'url':'nunique'})
                                       . reset_index())
 
+    right_table_data = update_all_flats.drop_duplicates(subset=['url'], keep='last')
+
     pie_chart = [go.Pie(labels = pie_chart_data['rooms_cnt'], 
                          values = pie_chart_data['url'],
                          name = 'pie')]
@@ -240,6 +208,23 @@ def update_figure(start_date, end_date, value, single_date, rooms):
                             ) 
                  ]
 
+    right_table = [go.Table(
+                    columnorder = [1,2,3,4,5,6],
+                    columnwidth = [80,400,80,80,80,80],
+                    header = dict(values=['к-во комнат', 'url', 'площадь', 'цена квартиры', 'цена кв.м.', 'этаж'],
+                                  fill_color = 'paleturquoise'
+                                ),
+                    cells = dict(values=[right_table_data.rooms_cnt,
+                                         right_table_data.url,
+                                         right_table_data.space,
+                                         right_table_data.price,
+                                         right_table_data.price_one_metre,
+                                         right_table_data.floor],
+                                 fill_color='lavender'
+                                 )
+                           )
+                  ]
+
     return (
             {
                 'data':pie_chart,
@@ -248,11 +233,15 @@ def update_figure(start_date, end_date, value, single_date, rooms):
             {
                 'data':left_table,
                 'layout':go.Layout()
+            },
+            {
+                'data':right_table,
+                'layout':go.Layout()
             }
         )
 
 
 if __name__ == '__main__':
-    print(all_flat_left_table)
+    
     app.run_server(debug=True)
 
